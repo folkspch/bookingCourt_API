@@ -58,6 +58,19 @@ app.get("/getCourtData", (req, res) => {
   });
 });
 
+app.get("/getCourtNameList", (req, res) => {
+    dbCon.query("SELECT Name_th FROM court", (error, results, fields) => {
+      if (error) throw error;
+  
+      let message = "";
+      if (results === undefined || results.length == 0) {
+        message = "Empty";
+      } else {
+        message = "Successfully retrieved data";
+      }
+      return res.send(results);
+    });
+  });
 // add a new book
 app.post("/", (req, res) => {
   let name = req.body.name;
@@ -85,28 +98,21 @@ app.post("/", (req, res) => {
 });
 
 // retrieve book by id
-app.get("/book/:id", (req, res) => {
-  let id = req.params.id;
-
-  if (!id) {
+app.get("/getBookingData/:date/:court", (req, res) => {
+  // let id = req.body.id;
+  let date = req.params.date;
+  let courtId = req.params.court;
+  
+  if (!date&!courtId) {
     return res
       .status(400)
-      .send({ error: true, message: "Please provide book id" });
+      .send({ error: true, message: "Incomplete fields" });
   } else {
     dbCon.query(
-      "SELECT * FROM books WHERE id = ?",
-      id,
+      "SELECT Time , Status FROM `booking` WHERE Day = ? AND Court_id = ?",[date,courtId],
       (error, results, fields) => {
         if (error) throw error;
-
-        let message = "";
-        if (results === undefined || results.length == 0) {
-          message = "Book not found";
-        } else {
-          message = "Successfully retrieved book data";
-        }
-
-        return res.send({ error: false, data: results[0], message: message });
+        return res.send({ error: false, data: results, message: "success" });
       }
     );
   }
